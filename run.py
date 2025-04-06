@@ -37,15 +37,18 @@ settings = {
         #     "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
         #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         # },
+        # {
+        #     "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
+        #     "parameters": {"storage_dir": "agent_storage/Group21Agent",},
+        # },
         {
-            "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
-            "parameters": {"storage_dir": "agent_storage/Group21Agent",},
+            "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
+            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         },
         {
             "class": "agents.group21_deadline_pusher_agent.group21_deadline_pusher_agent.DeadlinePusher",
             "parameters": {"storage_dir": "agent_storage/DeadlinePusher"},
         },
-        
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
     "deadline_time_ms": 10000,
