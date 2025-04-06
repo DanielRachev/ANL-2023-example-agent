@@ -93,6 +93,10 @@ class DeadlinePusher(DefaultParty):
             reservation_bid = self.profile.getReservationBid()
             self.minimal_utility = float(self.profile.getUtility()) if reservation_bid else 0.0 # Get utility of reservation bid
             self.domain = self.profile.getDomain()
+
+            if self.opponent_model is None:
+                self.opponent_model = OpponentModel(self.domain)
+
             profile_connection.close()
 
         # ActionDone informs you of an action (an offer or an accept)
@@ -265,13 +269,15 @@ class DeadlinePusher(DefaultParty):
                 utility = cast(DiscreteValueSetUtilities, utility)
 
                 values_with_utils = list(utility.getUtilities().items())
-                values_with_utils.sort(key=lambda x: x[1])
+                values_with_utils.sort(key=lambda x: x[1], reverse=True)
 
                 ind = int(self.compute_alpha(t) * (len(values_with_utils) - 1))
 
                 time_bid_dict[issue] = values_with_utils[ind][0]
                 
         time_bid = Bid(time_bid_dict)
+
+        if not self.last_received_bid: return time_bid
 
         utility_bs = float(self.profile.getUtility(time_bid))
         utulity_bo = 0.0 if not self.last_received_bid else float(self.profile.getUtility(self.last_received_bid))

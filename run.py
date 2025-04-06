@@ -41,13 +41,17 @@ settings = {
         #     "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
         #     "parameters": {"storage_dir": "agent_storage/Group21Agent",},
         # },
-        {
-            "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
-            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
-        },
+        # {
+        #     "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
         {
             "class": "agents.group21_deadline_pusher_agent.group21_deadline_pusher_agent.DeadlinePusher",
             "parameters": {"storage_dir": "agent_storage/DeadlinePusher"},
+        },
+        {
+            "class": "agents.group21_clueless_agent.group21_clueless_agent.CluelessAgent",
+            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         },
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
