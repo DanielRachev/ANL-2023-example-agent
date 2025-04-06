@@ -17,14 +17,31 @@ if not RESULTS_DIR.exists():
 #   You need to specify a time deadline (is milliseconds (ms)) we are allowed to negotiate before we end without agreement
 settings = {
     "agents": [
-        {
-            "class": "agents.ANL2022.dreamteam109_agent.dreamteam109_agent.DreamTeam109Agent",
-            "parameters": {"storage_dir": "agent_storage/DreamTeam109Agent"},
-        },
+        # {
+        #     "class": "agents.ANL2022.dreamteam109_agent.dreamteam109_agent.DreamTeam109Agent",
+        #     "parameters": {"storage_dir": "agent_storage/DreamTeam109Agent"},
+        # },
         {
             "class": "agents.template_agent.template_agent.TemplateAgent",
             "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         },
+        # {
+        #     "class": "agents.random_agent.random_agent.RandomAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
+        # {
+        #     "class": "agents.stupid_agent.stupid_agent.StupidAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
+        # {
+        #     "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
+        {
+            "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
+            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        },
+        
     ],
     "profiles": ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
     "deadline_time_ms": 10000,
