@@ -133,13 +133,41 @@ class Group21AdaptiveLearnerAgent(DefaultParty):
             f.write(data)
 
     def accept_condition(self, bid: Bid) -> bool:
+        """
+        New acceptance strategy:
+        AC_combi = AC_next or (AC_T and AC_const)
+        
+        - AC_next: Accept if the opponent’s bid is better than our upcoming bid.
+        - AC_T: Accept if a specified time threshold has passed.
+        - AC_const: Accept if the opponent’s bid is above a fixed constant threshold.
+        """
         if bid is None:
             return False
+
         progress = self.progress.get(time() * 1000)
-        threshold = self.compute_acceptance_threshold(progress)
-        current_util = self.profile.getUtility(bid)
-        self.logger.log(logging.DEBUG, f"Acceptance threshold: {threshold:.3f}, bid util: {current_util:.3f}")
-        return current_util >= threshold
+        opponent_bid_util = self.profile.getUtility(bid)
+        
+        # Compute our upcoming bid candidate and its utility.
+        next_bid = self.find_bid()
+        next_bid_util = self.profile.getUtility(next_bid) if next_bid is not None else 0.0
+
+        # AC_next: Accept if opponent's bid is at least as good as our next bid.
+        AC_next = opponent_bid_util >= next_bid_util
+
+        # AC_T: Accept if time has passed a set threshold (e.g., 90% of the negotiation time).
+        time_threshold = 0.9
+        AC_T = progress >= time_threshold
+
+        # AC_const: Accept if the opponent's bid is above a constant utility threshold.
+        const_threshold = 0.8
+        AC_const = opponent_bid_util >= const_threshold
+
+        # Composite acceptance condition.
+        AC_combi = AC_next or (AC_T and AC_const)
+        
+        self.logger.log(logging.DEBUG, f"Acceptance check: AC_next={AC_next}, AC_T={AC_T}, AC_const={AC_const}, opponent_bid_util={opponent_bid_util:.3f}, next_bid_util={next_bid_util:.3f}")
+        return AC_combi
+
 
     def compute_acceptance_threshold(self, progress: float) -> float:
         initial_threshold = 0.95
