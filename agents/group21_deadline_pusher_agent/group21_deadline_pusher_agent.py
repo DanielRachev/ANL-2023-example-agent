@@ -1,5 +1,4 @@
 import logging
-from random import randint, choice
 from time import time
 from typing import cast
 
@@ -9,7 +8,6 @@ from geniusweb.actions.Accept import Accept
 from geniusweb.actions.Action import Action
 from geniusweb.actions.Offer import Offer
 from geniusweb.actions.PartyId import PartyId
-from geniusweb.bidspace.AllBidsList import AllBidsList
 from geniusweb.inform.ActionDone import ActionDone
 from geniusweb.inform.Finished import Finished
 from geniusweb.inform.Inform import Inform
@@ -56,16 +54,14 @@ class DeadlinePusher(DefaultParty):
         self.opponent_model: OpponentModel = None
         self.logger.log(logging.INFO, "party is initialized")
 
-        # TODO: Decide on optimal values
-
         # Time-dependent bidding strategy
         self.time_cutoff = 0.95
         self.kappa = 0.1
-        self.beta = 0.1 # Boulware tactics family
+        self.beta = 0.05 # Boulware tactics family
 
         # Guessing heuristic opponent modelling
-        self.negotiation_speed = 0.1
-        self.minimal_utility = 0.0
+        self.negotiation_speed = 0.25
+        self.minimal_utility = 0.8
         self.tau_gen = 0.2
 
     def notifyChange(self, data: Inform):
@@ -201,7 +197,7 @@ class DeadlinePusher(DefaultParty):
             f.write(data)
 
     ###########################################################################################
-    ################################## Example methods below ##################################
+    ################################### Agent methods below ###################################
     ###########################################################################################
 
     def get_time(self) -> float:
@@ -213,7 +209,7 @@ class DeadlinePusher(DefaultParty):
         if bid is None:
             return False
         
-        return self.get_time() > self.time_cutoff and self.profile.getUtility(bid) >= self.minimal_utility
+        return self.get_time() > self.time_cutoff
 
     def compute_alpha(self, t):
         """Implementation of a polynomial alpha function."""
@@ -277,11 +273,10 @@ class DeadlinePusher(DefaultParty):
                 
         time_bid = Bid(time_bid_dict)
 
-        # TODO: Maybe use previous bid and incorporate time bid another way
         utility_bs = float(self.profile.getUtility(time_bid))
-        utulity_bo = self.opponent_model.getUtility(time_bid)
+        utulity_bo = 0.0 if not self.last_received_bid else float(self.profile.getUtility(self.last_received_bid))
 
-        concession_step = self.negotiation_speed * (1.0 - self.minimal_utility / utility_bs) * (utulity_bo - utility_bs)
+        concession_step = self.negotiation_speed * (1.0 - self.minimal_utility / (utility_bs + 1e-6)) * (utulity_bo - utility_bs + 1e-6)
         
         target_utility = utility_bs + concession_step
 
