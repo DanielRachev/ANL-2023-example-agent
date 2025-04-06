@@ -56,11 +56,20 @@ class DeadlinePusher(DefaultParty):
         self.opponent_model: OpponentModel = None
         self.logger.log(logging.INFO, "party is initialized")
 
-        self.kappa = 0.3
-        self.beta = 0.3 # Boulware tactics family
+        # TODO: Decide on optimal values
+
+        # Time-dependent bidding strategy
+        self.time_cutoff = 0.95
+        self.kappa = 0.1
+        self.beta = 0.1 # Boulware tactics family
+
+        # Guessing heuristic opponent modelling
+        self.negotiation_speed = 0.1
+        self.minimal_utility = 0.0
+        self.tau_gen = 0.2
 
     def notifyChange(self, data: Inform):
-        """MUST BE IMPLEMENTED
+        """
         This is the entry point of all interaction with your agent after is has been initialised.
         How to handle the received data is based on its class type.
 
@@ -85,6 +94,8 @@ class DeadlinePusher(DefaultParty):
                 data.getProfile().getURI(), self.getReporter()
             )
             self.profile = profile_connection.getProfile()
+            reservation_bid = self.profile.getReservationBid()
+            self.minimal_utility = float(self.profile.getUtility()) if reservation_bid else 0.0 # Get utility of reservation bid
             self.domain = self.profile.getDomain()
             profile_connection.close()
 
@@ -202,7 +213,7 @@ class DeadlinePusher(DefaultParty):
         if bid is None:
             return False
         
-        return self.get_time() > 0.95 #TODO: Decide on optimal threshold value
+        return self.get_time() > self.time_cutoff and self.profile.getUtility(bid) >= self.minimal_utility
 
     def compute_alpha(self, t):
         """Implementation of a polynomial alpha function."""
@@ -210,10 +221,34 @@ class DeadlinePusher(DefaultParty):
         # Exponential implementation
         # return exp(log(self.kappa) * (1 - t) ** self.beta)
     
+    def get_value_from_utility(self, utility, target_utility):
+        """Get the value from the utility function given a target utility."""
+        if isinstance(utility, NumberValueSetUtilities):
+            low_val = utility.getLowValue()
+            high_val = utility.getHighValue()
+            low_util = utility.getLowUtility()
+            high_util = utility.getHighUtility()
+
+            if high_val == low_val or high_util == low_util:
+                return low_val
+
+            # Linear interpolation formula: y = y0 + ((y1 - y0) * (x - x0)) / (x1 - x0)
+            # We want to solve for x: value, given y = target_utility
+            value = low_val + ((high_val - low_val) * (target_utility - low_util)) / (high_util - low_util)
+            return value
+
+        if isinstance(utility, DiscreteValueSetUtilities):
+            utilities = utility.getUtilities()
+            # Find the key (value) with the closest utility
+            closest_val = min(utilities.items(), key=lambda item: abs(float(item[1]) - target_utility))[0]
+            return closest_val
+
+        return None
+    
     def find_bid(self) -> Bid:
         """Find a bid to propose as counter offer."""
         t = self.get_time()
-        bid_dict = {}
+        time_bid_dict = {}
 
         utilities = self.profile.getUtilities()
 
@@ -226,10 +261,10 @@ class DeadlinePusher(DefaultParty):
                 
                 if utility.getLowUtility() < utility.getHighUtility():
                     # Monotonically increasing utility function
-                    bid_dict[issue] = min_value + (1 - self.compute_alpha(t)) * (max_value - min_value)
+                    time_bid_dict[issue] = min_value + (1 - self.compute_alpha(t)) * (max_value - min_value)
                 else:
                     # Monotonically decreasing utility function
-                    bid_dict[issue] = min_value + self.compute_alpha(t) * (max_value - min_value)
+                    time_bid_dict[issue] = min_value + self.compute_alpha(t) * (max_value - min_value)
             elif isinstance(utility, DiscreteValueSetUtilities):
                 utility = cast(DiscreteValueSetUtilities, utility)
 
@@ -238,8 +273,44 @@ class DeadlinePusher(DefaultParty):
 
                 ind = int(self.compute_alpha(t) * (len(values_with_utils) - 1))
 
-                bid_dict[issue] = values_with_utils[ind][0]
+                time_bid_dict[issue] = values_with_utils[ind][0]
                 
-        bid = Bid(bid_dict)
+        time_bid = Bid(time_bid_dict)
 
-        return bid
+        # TODO: Maybe use previous bid and incorporate time bid another way
+        utility_bs = float(self.profile.getUtility(time_bid))
+        utulity_bo = self.opponent_model.getUtility(time_bid)
+
+        concession_step = self.negotiation_speed * (1.0 - self.minimal_utility / utility_bs) * (utulity_bo - utility_bs)
+        
+        target_utility = utility_bs + concession_step
+
+        normalization_factor = 0.0
+        for issue, utility in utilities.items():
+            weight_s = float(self.profile.getWeight(issue))
+            evaluation_bs_j = float(utility.getUtility(time_bid.getValue(issue)))
+
+            alpha_j = (1.0 - weight_s) * (1.0 - evaluation_bs_j)
+
+            normalization_factor = weight_s * alpha_j
+
+        final_bid_dict = {}
+        for issue, utility in utilities.items():
+            weight_s = float(self.profile.getWeight(issue))
+            weight_o = self.opponent_model.getWeight(issue)
+
+            delta_j = (weight_o - weight_s) / (weight_o + weight_s)
+            tau_j = self.tau_gen * (1.0 + delta_j)
+        
+            evaluation_bs_j = float(utility.getUtility(time_bid.getValue(issue)))
+            evaluation_bo_j = 0.0 if not self.last_received_bid else float(utility.getUtility(self.last_received_bid.getValue(issue)))
+
+            alpha_j = (1.0 - weight_s) * (1.0 - evaluation_bs_j)
+            basic_target_evaluation_j = evaluation_bs_j + (alpha_j / normalization_factor) * (target_utility - utility_bs)
+            target_evaluation_j = (1.0 - tau_j) * basic_target_evaluation_j + tau_j * evaluation_bo_j
+
+            final_bid_dict[issue] = self.get_value_from_utility(utility, target_evaluation_j)
+
+        final_bid = Bid(final_bid_dict)
+
+        return final_bid

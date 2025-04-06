@@ -23,9 +23,9 @@ class OpponentModel:
         for issue_id, issue_estimator in self.issue_estimators.items():
             issue_estimator.update(bid.getValue(issue_id))
 
-    def get_predicted_utility(self, bid: Bid):
+    def getUtility(self, bid: Bid) -> float:
         if len(self.offers) == 0 or bid is None:
-            return 0
+            return 0.0
 
         # initiate
         total_issue_weight = 0.0
@@ -56,6 +56,11 @@ class OpponentModel:
 
         return predicted_utility
 
+    def getWeight(self, issue: str) -> float:
+        if issue in self.issue_estimators:
+            return self.issue_estimators[issue].weight
+
+        return 0.0
 
 class IssueEstimator:
     def __init__(self, value_set: DiscreteValueSet):
