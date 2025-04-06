@@ -59,6 +59,7 @@ class Group21StrategicConcederAgent(DefaultParty):
         self.bid_search_attempts = 1000
         self.min_bids_for_opponent_model = 5
         self.last_utility = 1.0
+        self.next_bid_difference_margin = 0.05
 
         self.logger.log(logging.INFO, "party is initialized")
 
@@ -267,7 +268,7 @@ class Group21StrategicConcederAgent(DefaultParty):
                 self.best_bid_overall = bid
 
             # Check if the bid meets the target utility criteria
-            if my_utility >= self.target_utility and abs(my_utility - self.target_utility) <= 0.05:
+            if my_utility >= self.target_utility and abs(my_utility - self.target_utility) <= self.next_bid_difference_margin:
                 if my_utility >= self.last_utility:
                     candidate_bids.append(bid)
                 secondary_candidate_bids.append(bid)

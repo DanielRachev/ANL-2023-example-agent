@@ -17,44 +17,44 @@ if not RESULTS_DIR.exists():
 #   You need to specify a time deadline (is milliseconds (ms)) we are allowed to negotiate before we end without agreement.
 tournament_settings = {
     "agents": [
+        # {
+        #     "class": "agents.template_agent.template_agent.TemplateAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
+        # {
+        #     "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
+        # },
+        # {
+        #     "class": "agents.conceder_agent.conceder_agent.ConcederAgent",
+        # },
+        # {
+        #     "class": "agents.hardliner_agent.hardliner_agent.HardlinerAgent",
+        # },
+        # {
+        #     "class": "agents.linear_agent.linear_agent.LinearAgent",
+        # },
+        # {
+        #     "class": "agents.random_agent.random_agent.RandomAgent",
+        # },
+        # {
+        #     "class": "agents.stupid_agent.stupid_agent.StupidAgent",
+        # },
         {
-            "class": "agents.template_agent.template_agent.TemplateAgent",
+            "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
+            "parameters": {"storage_dir": "agent_storage/Group21Agent",},
+        },
+        {
+            "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
             "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         },
         {
-            "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
+            "class": "agents.group21_deadline_pusher_agent.group21_deadline_pusher_agent.DeadlinePusher",
+            "parameters": {"storage_dir": "agent_storage/DeadlinePusher"},
         },
         {
-            "class": "agents.conceder_agent.conceder_agent.ConcederAgent",
+            "class": "agents.group21_clueless_agent.group21_clueless_agent.CluelessAgent",
+            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         },
-        {
-            "class": "agents.hardliner_agent.hardliner_agent.HardlinerAgent",
-        },
-        {
-            "class": "agents.linear_agent.linear_agent.LinearAgent",
-        },
-        {
-            "class": "agents.random_agent.random_agent.RandomAgent",
-        },
-        {
-            "class": "agents.stupid_agent.stupid_agent.StupidAgent",
-        },
-        # {
-        #     "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
-        #     "parameters": {"storage_dir": "agent_storage/Group21Agent",},
-        # },
-        # {
-        #     "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
-        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
-        # },
-        # {
-        #     "class": "agents.group21_deadline_pusher_agent.group21_deadline_pusher_agent.DeadlinePusher",
-        #     "parameters": {"storage_dir": "agent_storage/DeadlinePusher"},
-        # },
-        # {
-        #     "class": "agents.group21_clueless_agent.group21_clueless_agent.CluelessAgent",
-        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
-        # },
     ],
     "profile_sets": [
         ["domains/domain00/profileA.json", "domains/domain00/profileB.json"],
