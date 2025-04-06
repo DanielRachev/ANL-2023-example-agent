@@ -2,8 +2,6 @@ import logging
 from time import time
 from typing import cast
 
-from numpy import exp, log
-
 from geniusweb.actions.Accept import Accept
 from geniusweb.actions.Action import Action
 from geniusweb.actions.Offer import Offer
@@ -57,12 +55,12 @@ class DeadlinePusher(DefaultParty):
         # Time-dependent bidding strategy
         self.time_cutoff = 0.95
         self.kappa = 0.1
-        self.beta = 0.05 # Boulware tactics family
+        self.beta = 0.2 # Boulware tactics family
 
         # Guessing heuristic opponent modelling
-        self.negotiation_speed = 0.25
+        self.negotiation_speed = 0.05
         self.minimal_utility = 0.8
-        self.tau_gen = 0.2
+        self.tau_gen = 0.1
 
     def notifyChange(self, data: Inform):
         """
@@ -91,7 +89,8 @@ class DeadlinePusher(DefaultParty):
             )
             self.profile = profile_connection.getProfile()
             reservation_bid = self.profile.getReservationBid()
-            self.minimal_utility = float(self.profile.getUtility()) if reservation_bid else 0.0 # Get utility of reservation bid
+            if reservation_bid:
+                self.minimal_utility = float(self.profile.getUtility(reservation_bid)) # Get utility of reservation bid
             self.domain = self.profile.getDomain()
 
             if self.opponent_model is None:
@@ -256,8 +255,8 @@ class DeadlinePusher(DefaultParty):
             if isinstance(utility, NumberValueSetUtilities):
                 utility = cast(NumberValueSetUtilities, utility)
 
-                min_value = utility.getLowUtility()
-                max_value = utility.getHighUtility()
+                min_value = utility.getLowValue()
+                max_value = utility.getHighValue()
                 
                 if utility.getLowUtility() < utility.getHighUtility():
                     # Monotonically increasing utility function
@@ -277,23 +276,24 @@ class DeadlinePusher(DefaultParty):
                 
         time_bid = Bid(time_bid_dict)
 
-        if not self.last_received_bid: return time_bid
+        if not self.last_received_bid:
+            return time_bid
 
         utility_bs = float(self.profile.getUtility(time_bid))
-        utulity_bo = 0.0 if not self.last_received_bid else float(self.profile.getUtility(self.last_received_bid))
+        utility_bo = float(self.profile.getUtility(self.last_received_bid))
 
-        concession_step = self.negotiation_speed * (1.0 - self.minimal_utility / (utility_bs + 1e-6)) * (utulity_bo - utility_bs + 1e-6)
+        concession_step = self.negotiation_speed * (1.0 - self.minimal_utility / (utility_bs + 1e-6)) * (utility_bo - utility_bs + 1e-6)
         
         target_utility = utility_bs + concession_step
 
-        normalization_factor = 0.0
+        normalization_factor = 1e-6
         for issue, utility in utilities.items():
             weight_s = float(self.profile.getWeight(issue))
             evaluation_bs_j = float(utility.getUtility(time_bid.getValue(issue)))
 
             alpha_j = (1.0 - weight_s) * (1.0 - evaluation_bs_j)
 
-            normalization_factor = weight_s * alpha_j
+            normalization_factor += weight_s * alpha_j
 
         final_bid_dict = {}
         for issue, utility in utilities.items():
@@ -304,7 +304,7 @@ class DeadlinePusher(DefaultParty):
             tau_j = self.tau_gen * (1.0 + delta_j)
         
             evaluation_bs_j = float(utility.getUtility(time_bid.getValue(issue)))
-            evaluation_bo_j = 0.0 if not self.last_received_bid else float(utility.getUtility(self.last_received_bid.getValue(issue)))
+            evaluation_bo_j = float(utility.getUtility(self.last_received_bid.getValue(issue)))
 
             alpha_j = (1.0 - weight_s) * (1.0 - evaluation_bs_j)
             basic_target_evaluation_j = evaluation_bs_j + (alpha_j / normalization_factor) * (target_utility - utility_bs)
