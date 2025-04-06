@@ -21,10 +21,10 @@ settings = {
         #     "class": "agents.ANL2022.dreamteam109_agent.dreamteam109_agent.DreamTeam109Agent",
         #     "parameters": {"storage_dir": "agent_storage/DreamTeam109Agent"},
         # },
-        {
-            "class": "agents.template_agent.template_agent.TemplateAgent",
-            "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
-        },
+        # {
+        #     "class": "agents.template_agent.template_agent.TemplateAgent",
+        #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
+        # },
         # {
         #     "class": "agents.random_agent.random_agent.RandomAgent",
         #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
@@ -37,6 +37,10 @@ settings = {
         #     "class": "agents.boulware_agent.boulware_agent.BoulwareAgent",
         #     "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
         # },
+        {
+            "class": "agents.group21_adaptive_learner_agent.group21_adaptive_learner_agent.Group21AdaptiveLearnerAgent",
+            "parameters": {"storage_dir": "agent_storage/Group21Agent",},
+        },
         {
             "class": "agents.group21_strategic_conceder_agent.group21_strategic_conceder_agent.Group21StrategicConcederAgent",
             "parameters": {"storage_dir": "agent_storage/TemplateAgent"},
